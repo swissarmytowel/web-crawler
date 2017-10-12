@@ -1,6 +1,6 @@
 from socket import error as socket_error
 from urllib.error import URLError
-from urllib.request import urlopen
+from urllib.request import urlopen, urljoin
 from bs4 import BeautifulSoup
 
 
@@ -50,6 +50,10 @@ class WebCrawler(object):
         self.__retained_items_list = self.__page_soup.findAll(tag)
         if self.__retained_items_list is None:
             raise ParserError
+        self.__retained_items_list = [item.get("src")
+                                      if item.get("src").startswith(self.__url)
+                                      else urljoin(self.__url, item.get("src"))
+                                      for item in self.__retained_items_list]
 
     @property
     def get_retained_items(self) -> list:
@@ -57,14 +61,15 @@ class WebCrawler(object):
 
 
 if __name__ == "__main__":
-    my_url = "https://www.python.org"
-    my_tag = "img"
+    test_url = "https://www.python.org"
+    test_tag = "img"
 
-    test_spider = WebCrawler(my_url)
+    test_spider = WebCrawler(test_url)
     try:
-        test_spider.parse_html(my_tag)
+        test_spider.parse_html(test_tag)
     except ParserError as e:
         print(e.what)
 
-    print("Found " + str(len(test_spider.get_retained_items)) + " items from \"" + my_url + "\" by tag \"" + my_tag + "\"")
-
+    print("Found " + str(len(test_spider.get_retained_items)) + " items from \"" + test_url +
+          "\" by tag \"" + test_tag + "\"")
+    print(test_spider.get_retained_items)
