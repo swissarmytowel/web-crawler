@@ -5,10 +5,11 @@ from bs4 import BeautifulSoup
 
 
 class ParserError(Exception):
-    def __init__(self, *args):
-        Exception.__init__(self, *args)
-        self.__message = "Parsing error occured"
+    def __init__(self):
+        Exception.__init__(self)
+        self.__message = "Parsing html error occurred"
 
+    @property
     def what(self):
         return self.__message
 
@@ -38,26 +39,32 @@ class WebCrawler(object):
             url_client = urlopen(self.__url)
             self.__page_html = url_client.read()
             url_client.close()
-        except URLError as e:
-            print("Url error occurred: " + str(e.reason))
+        except URLError as url_exception:
+            print("Url error occurred: " + str(url_exception.reason))
         except ValueError:
             print("Unknown url type: \'" + self.__url + "'")
-        except socket_error as e:
-            print("Socket error has occurred: " + e.errno + " in " + e.filename)
+        except socket_error as socket_exception:
+            print("Socket error has occurred: " + socket_exception.errno + " in " + socket_exception.filename)
 
     def parse_html(self, tag: str):
         self.__retained_items_list = self.__page_soup.findAll(tag)
         if self.__retained_items_list is None:
             raise ParserError
 
-    def get_retained_items(self):
+    @property
+    def get_retained_items(self) -> list:
         return self.__retained_items_list
 
+
 if __name__ == "__main__":
-    tmp = WebCrawler("https://www.python.org")
+    my_url = "https://www.python.org"
+    my_tag = "img"
+
+    test_spider = WebCrawler(my_url)
     try:
-        tmp.parse_html(tag='img')
+        test_spider.parse_html(my_tag)
     except ParserError as e:
-        print(e.what())
-    print(len(tmp.get_retained_items()))
+        print(e.what)
+
+    print("Found " + str(len(test_spider.get_retained_items)) + " items from \"" + my_url + "\" by tag \"" + my_tag + "\"")
 
